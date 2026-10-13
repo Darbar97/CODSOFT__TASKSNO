@@ -1,0 +1,113 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'premparmar9161@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidUser(data) {
+      return data.uid is string && data.uid == request.auth.uid &&
+             data.email is string && data.email.size() <= 150 &&
+             (!('name' in data) || (data.name is string && data.name.size() <= 100)) &&
+             (!('role' in data) || (data.role is string && data.role.size() <= 50));
+    }
+
+    function isValidProject(data) {
+      return data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+             data.ownerId is string && data.ownerId.size() <= 128 &&
+             data.status in ['planning', 'active', 'on_hold', 'completed'] &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 1000)) &&
+             (!('color' in data) || (data.color is string && data.color.size() <= 30)) &&
+             (!('targetDate' in data) || (data.targetDate is string && data.targetDate.size() <= 30)) &&
+             (!('memberIds' in data) || (data.memberIds is list && data.memberIds.size() <= 50));
+    }
+
+    function isProjectMember(projectData) {
+      return isSignedIn() && (
+        projectData.ownerId == request.auth.uid ||
+        (projectData.memberIds is list && request.auth.uid in projectData.memberIds) ||
+        isAdmin()
+      );
+    }
+
+    function isValidTask(data, parentProjectId) {
+      return data.projectId == parentProjectId &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 180 &&
+             data.status in ['todo', 'in_progress', 'review', 'done'] &&
+             data.priority in ['low', 'medium', 'high', 'urgent'] &&
+             data.createdBy is string && data.createdBy.size() <= 128 &&
+             (!('progress' in data) || (data.progress is number && data.progress >= 0 && data.progress <= 100)) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 2500)) &&
+             (!('dueDate' in data) || (data.dueDate is string && data.dueDate.size() <= 30)) &&
+             (!('tags' in data) || (data.tags is list && data.tags.size() <= 15));
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId);
+      allow list: if isSignedIn();
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUser(request.resource.data);
+      allow update: if (isOwner(userId) || isAdmin()) && isValidId(userId) && isValidUser(request.resource.data) &&
+                       request.resource.data.uid == resource.data.uid;
+      allow delete: if isAdmin();
+    }
+
+    // --- Projects Collection ---
+    match /projects/{projectId} {
+      allow get: if isSignedIn() && isValidId(projectId) && isProjectMember(resource.data);
+      allow list: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid ||
+        (resource.data.memberIds is list && request.auth.uid in resource.data.memberIds) ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && isValidId(projectId) &&
+                       request.resource.data.ownerId == request.auth.uid &&
+                       isValidProject(request.resource.data);
+      allow update: if isSignedIn() && isValidId(projectId) && isProjectMember(resource.data) &&
+                       request.resource.data.ownerId == resource.data.ownerId &&
+                       isValidProject(request.resource.data);
+      allow delete: if isSignedIn() && isValidId(projectId) &&
+                       (resource.data.ownerId == request.auth.uid || isAdmin());
+
+      // --- Tasks Subcollection ---
+      match /tasks/{taskId} {
+        allow get: if isSignedIn() && isValidId(taskId) &&
+                      isProjectMember(get(/databases/$(database)/documents/projects/$(projectId)).data);
+        allow list: if isSignedIn() &&
+                       isProjectMember(get(/databases/$(database)/documents/projects/$(projectId)).data);
+        allow create: if isSignedIn() && isValidId(taskId) &&
+                         isProjectMember(get(/databases/$(database)/documents/projects/$(projectId)).data) &&
+                         isValidTask(request.resource.data, projectId) &&
+                         request.resource.data.createdBy == request.auth.uid;
+        allow update: if isSignedIn() && isValidId(taskId) &&
+                         isProjectMember(get(/databases/$(database)/documents/projects/$(projectId)).data) &&
+                         isValidTask(request.resource.data, projectId) &&
+                         request.resource.data.createdBy == resource.data.createdBy &&
+                         request.resource.data.projectId == resource.data.projectId;
+        allow delete: if isSignedIn() && isValidId(taskId) &&
+                         isProjectMember(get(/databases/$(database)/documents/projects/$(projectId)).data);
+      }
+    }
+  }
+}

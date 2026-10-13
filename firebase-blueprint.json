@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered user profile in the project management system",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email", "maxLength": 150 },
+        "role": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Collaborative project containing tasks, milestone deadlines, and team members",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "ownerEmail": { "type": "string", "maxLength": 150 },
+        "color": { "type": "string", "maxLength": 20 },
+        "status": {
+          "type": "string",
+          "enum": ["planning", "active", "on_hold", "completed"]
+        },
+        "targetDate": { "type": "string", "maxLength": 30 },
+        "memberIds": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["name", "ownerId", "status"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Actionable task item belonging to a project with assignee, priority, deadline, and progress percentage",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "description": { "type": "string", "maxLength": 2500 },
+        "status": {
+          "type": "string",
+          "enum": ["todo", "in_progress", "review", "done"]
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "urgent"]
+        },
+        "assigneeId": { "type": "string", "maxLength": 128 },
+        "assigneeName": { "type": "string", "maxLength": 100 },
+        "assigneeEmail": { "type": "string", "maxLength": 150 },
+        "dueDate": { "type": "string", "maxLength": 30 },
+        "progress": { "type": "number" },
+        "tags": { "type": "array" },
+        "createdBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["projectId", "title", "status", "priority", "createdBy"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile records indexed by auth UID"
+    },
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Projects created and owned or shared by team members"
+    },
+    "/projects/{projectId}/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Subcollection of tasks partitioned under their parent project"
+    }
+  }
+}

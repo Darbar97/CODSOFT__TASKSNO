@@ -1,0 +1,6 @@
+{
+  "name": "PlanPulse - Project Management & Task Tracking",
+  "description": "Modern collaborative project management tool to organize projects, assign tasks, set deadlines, track progress with Kanban and Timeline views, and manage team velocity.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
