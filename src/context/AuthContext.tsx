@@ -13,12 +13,15 @@ interface AppUser {
   displayName: string | null;
   photoURL: string | null;
   isGuest: boolean;
+  role?: string;
 }
 
 interface AuthContextValue {
   user: AppUser | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, displayName?: string) => Promise<void>;
+  loginAsDemoUser: (demo: { uid: string; email: string; displayName: string; role?: string }) => void;
   signOutUser: () => Promise<void>;
   continueAsGuest: () => void;
   error: string | null;
@@ -75,6 +78,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithEmail = async (email: string, displayName?: string) => {
+    setError(null);
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      setError('Please provide a valid email address');
+      return;
+    }
+    const name = displayName?.trim() || cleanEmail.split('@')[0];
+    const generatedUid = `usr_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    setUser({
+      uid: generatedUid,
+      email: cleanEmail,
+      displayName: name,
+      photoURL: null,
+      isGuest: false,
+      role: 'Project Member',
+    });
+  };
+
+  const loginAsDemoUser = (demo: { uid: string; email: string; displayName: string; role?: string }) => {
+    setUser({
+      uid: demo.uid,
+      email: demo.email,
+      displayName: demo.displayName,
+      photoURL: null,
+      isGuest: false,
+      role: demo.role || 'Member',
+    });
+    setError(null);
+  };
+
   const continueAsGuest = () => {
     setUser({
       uid: 'guest_user_lead',
@@ -82,6 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       displayName: 'Alex Rivera (Lead)',
       photoURL: null,
       isGuest: true,
+      role: 'Lead Architect',
     });
     setError(null);
   };
@@ -105,6 +140,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         loading,
         signInWithGoogle,
+        signInWithEmail,
+        loginAsDemoUser,
         signOutUser,
         continueAsGuest,
         error,

@@ -20,12 +20,14 @@ import { Menu, X, Plus, FolderKanban, Bot } from 'lucide-react';
 
 interface DashboardContentProps {
   onNavigateHome: () => void;
+  onNavigateLogin: () => void;
   onOpenChatbot: () => void;
   onOpenDeveloperInfo: () => void;
 }
 
 function DashboardContent({
   onNavigateHome,
+  onNavigateLogin,
   onOpenChatbot,
   onOpenDeveloperInfo,
 }: DashboardContentProps) {
@@ -70,6 +72,7 @@ function DashboardContent({
         onOpenNewTask={() => handleOpenNewTask('todo')}
         onOpenNewProject={handleOpenNewProject}
         onNavigateHome={onNavigateHome}
+        onNavigateLogin={onNavigateLogin}
         onOpenChatbot={onOpenChatbot}
         onOpenDeveloperInfo={onOpenDeveloperInfo}
       />
@@ -176,6 +179,13 @@ function MainView() {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [isDeveloperModalOpen, setIsDeveloperModalOpen] = useState(false);
 
+  // Automatically transition to workspace once user logs in from login page
+  React.useEffect(() => {
+    if (user && currentPage === 'login') {
+      setCurrentPage('workspace');
+    }
+  }, [user, currentPage]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400 gap-3">
@@ -200,6 +210,7 @@ function MainView() {
       {currentPage === 'home' && (
         <HomePage
           onLaunchApp={handleLaunchApp}
+          onNavigateLogin={() => setCurrentPage('login')}
           onOpenChatbot={() => setIsChatbotOpen(true)}
           onOpenDeveloperInfo={() => setIsDeveloperModalOpen(true)}
         />
@@ -208,6 +219,7 @@ function MainView() {
       {currentPage === 'login' && (
         <LoginPage
           onNavigateHome={() => setCurrentPage('home')}
+          onLoginSuccess={() => setCurrentPage('workspace')}
           onOpenDeveloperInfo={() => setIsDeveloperModalOpen(true)}
         />
       )}
@@ -215,6 +227,7 @@ function MainView() {
       {currentPage === 'workspace' && (
         <DashboardContent
           onNavigateHome={() => setCurrentPage('home')}
+          onNavigateLogin={() => setCurrentPage('login')}
           onOpenChatbot={() => setIsChatbotOpen(true)}
           onOpenDeveloperInfo={() => setIsDeveloperModalOpen(true)}
         />

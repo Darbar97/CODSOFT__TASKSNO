@@ -22,12 +22,14 @@ import { useProjects } from '../context/ProjectContext.tsx';
 
 interface HomePageProps {
   onLaunchApp: () => void;
+  onNavigateLogin?: () => void;
   onOpenChatbot: () => void;
   onOpenDeveloperInfo?: () => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
   onLaunchApp,
+  onNavigateLogin,
   onOpenChatbot,
   onOpenDeveloperInfo,
 }) => {
@@ -75,6 +77,15 @@ export const HomePage: React.FC<HomePageProps> = ({
             <Bot className="w-3.5 h-3.5 text-indigo-400" />
             <span>Master</span>
           </button>
+
+          {!user && onNavigateLogin && (
+            <button
+              onClick={onNavigateLogin}
+              className="text-xs font-medium text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-800 hover:bg-slate-900 transition-colors cursor-pointer"
+            >
+              Sign In
+            </button>
+          )}
 
           <button
             onClick={onLaunchApp}

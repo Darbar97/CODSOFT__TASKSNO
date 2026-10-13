@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Calendar,
   AlertCircle,
@@ -21,6 +21,7 @@ interface TaskCardProps {
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, onSelect, onEdit }) => {
   const { moveTaskStatus, deleteTask, teamMembers } = useProjects();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const assignee = teamMembers.find((m) => m.id === task.assigneeId);
 
@@ -109,12 +110,19 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onSelect, onEdit }) =>
           </button>
           <button
             onClick={() => {
-              if (window.confirm(`Delete task "${task.title}"?`)) {
+              if (confirmDelete) {
                 deleteTask(task.id);
+              } else {
+                setConfirmDelete(true);
+                setTimeout(() => setConfirmDelete(false), 3000);
               }
             }}
-            className="p-1 rounded hover:bg-slate-800 text-rose-400 hover:text-rose-300"
-            title="Delete task"
+            className={`p-1 rounded transition-colors ${
+              confirmDelete
+                ? 'bg-rose-900/60 text-rose-300 ring-1 ring-rose-500'
+                : 'hover:bg-slate-800 text-rose-400 hover:text-rose-300'
+            }`}
+            title={confirmDelete ? 'Click again to confirm delete' : 'Delete task'}
             aria-label="Delete task"
           >
             <Trash2 className="w-3 h-3" />

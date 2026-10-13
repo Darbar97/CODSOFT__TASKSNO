@@ -75,38 +75,27 @@ service cloud.firestore {
 
     // --- Projects Collection ---
     match /projects/{projectId} {
-      allow get: if isSignedIn() && isValidId(projectId) && isProjectMember(resource.data);
-      allow list: if isSignedIn() && (
-        resource.data.ownerId == request.auth.uid ||
-        (resource.data.memberIds is list && request.auth.uid in resource.data.memberIds) ||
-        isAdmin()
-      );
+      allow get: if isSignedIn() && isValidId(projectId);
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && isValidId(projectId) &&
                        request.resource.data.ownerId == request.auth.uid &&
                        isValidProject(request.resource.data);
-      allow update: if isSignedIn() && isValidId(projectId) && isProjectMember(resource.data) &&
-                       request.resource.data.ownerId == resource.data.ownerId &&
+      allow update: if isSignedIn() && isValidId(projectId) &&
+                       (resource.data.ownerId == request.auth.uid || isAdmin() || (resource.data.memberIds is list && request.auth.uid in resource.data.memberIds)) &&
                        isValidProject(request.resource.data);
       allow delete: if isSignedIn() && isValidId(projectId) &&
                        (resource.data.ownerId == request.auth.uid || isAdmin());
 
       // --- Tasks Subcollection ---
       match /tasks/{taskId} {
-        allow get: if isSignedIn() && isValidId(taskId) &&
-                      isProjectMember(get(/databases/$(database)/documents/projects/$(projectId)).data);
-        allow list: if isSignedIn() &&
-                       isProjectMember(get(/databases/$(database)/documents/projects/$(projectId)).data);
+        allow get: if isSignedIn() && isValidId(taskId);
+        allow list: if isSignedIn();
         allow create: if isSignedIn() && isValidId(taskId) &&
-                         isProjectMember(get(/databases/$(database)/documents/projects/$(projectId)).data) &&
                          isValidTask(request.resource.data, projectId) &&
                          request.resource.data.createdBy == request.auth.uid;
         allow update: if isSignedIn() && isValidId(taskId) &&
-                         isProjectMember(get(/databases/$(database)/documents/projects/$(projectId)).data) &&
-                         isValidTask(request.resource.data, projectId) &&
-                         request.resource.data.createdBy == resource.data.createdBy &&
-                         request.resource.data.projectId == resource.data.projectId;
-        allow delete: if isSignedIn() && isValidId(taskId) &&
-                         isProjectMember(get(/databases/$(database)/documents/projects/$(projectId)).data);
+                         isValidTask(request.resource.data, projectId);
+        allow delete: if isSignedIn() && isValidId(taskId);
       }
     }
   }

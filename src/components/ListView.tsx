@@ -27,6 +27,7 @@ export const ListView: React.FC<ListViewProps> = ({ onSelectTask, onEditTask }) 
 
   const [sortField, setSortField] = useState<SortField>('dueDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -285,12 +286,22 @@ export const ListView: React.FC<ListViewProps> = ({ onSelectTask, onEditTask }) 
                         </button>
                         <button
                           onClick={() => {
-                            if (window.confirm(`Delete task "${task.title}"?`)) {
+                            if (confirmDeleteId === task.id) {
                               deleteTask(task.id);
+                              setConfirmDeleteId(null);
+                            } else {
+                              setConfirmDeleteId(task.id);
+                              setTimeout(() => {
+                                setConfirmDeleteId((prev) => (prev === task.id ? null : prev));
+                              }, 3000);
                             }
                           }}
-                          className="p-1 rounded hover:bg-slate-800 text-rose-400 hover:text-rose-300"
-                          title="Delete task"
+                          className={`p-1 rounded transition-colors ${
+                            confirmDeleteId === task.id
+                              ? 'bg-rose-950 text-rose-300 ring-1 ring-rose-500'
+                              : 'hover:bg-slate-800 text-rose-400 hover:text-rose-300'
+                          }`}
+                          title={confirmDeleteId === task.id ? 'Click again to confirm delete' : 'Delete task'}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

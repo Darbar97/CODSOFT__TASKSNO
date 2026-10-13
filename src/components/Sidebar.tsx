@@ -35,6 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   } = useProjects();
 
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const getProjectTaskCounts = (projectId: string) => {
     const tasks = allTasks.filter((t) => t.projectId === projectId);
@@ -146,15 +147,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       {projects.length > 1 && (
                         <button
                           onClick={() => {
-                            setMenuOpenId(null);
-                            if (window.confirm(`Delete project "${proj.name}"? Tasks will also be removed.`)) {
+                            if (confirmDeleteId === proj.id) {
+                              setMenuOpenId(null);
+                              setConfirmDeleteId(null);
                               deleteProject(proj.id);
+                            } else {
+                              setConfirmDeleteId(proj.id);
                             }
                           }}
-                          className="w-full text-left px-3 py-1.5 text-xs text-rose-400 hover:bg-slate-800 flex items-center gap-2"
+                          className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors ${
+                            confirmDeleteId === proj.id
+                              ? 'bg-rose-950 text-rose-300 font-medium'
+                              : 'text-rose-400 hover:bg-slate-800'
+                          }`}
                         >
                           <Trash2 className="w-3 h-3" />
-                          <span>Delete</span>
+                          <span>{confirmDeleteId === proj.id ? 'Confirm Delete?' : 'Delete'}</span>
                         </button>
                       )}
                     </div>

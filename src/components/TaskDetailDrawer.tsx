@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   X,
   Calendar,
@@ -32,6 +32,8 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
     teamMembers,
     currentProject,
   } = useProjects();
+
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!task) return null;
 
@@ -86,13 +88,20 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
             </button>
             <button
               onClick={() => {
-                if (window.confirm(`Delete task "${task.title}"?`)) {
+                if (confirmDelete) {
                   deleteTask(task.id);
                   onClose();
+                } else {
+                  setConfirmDelete(true);
+                  setTimeout(() => setConfirmDelete(false), 3000);
                 }
               }}
-              className="p-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-slate-800"
-              title="Delete task"
+              className={`p-1.5 rounded-lg transition-colors ${
+                confirmDelete
+                  ? 'bg-rose-950 text-rose-300 ring-1 ring-rose-500'
+                  : 'text-rose-400 hover:text-rose-300 hover:bg-slate-800'
+              }`}
+              title={confirmDelete ? 'Click again to confirm delete' : 'Delete task'}
               aria-label="Delete task"
             >
               <Trash2 className="w-4 h-4" />

@@ -16,6 +16,7 @@ interface HeaderProps {
   onOpenNewTask: () => void;
   onOpenNewProject: () => void;
   onNavigateHome?: () => void;
+  onNavigateLogin?: () => void;
   onOpenChatbot?: () => void;
   onOpenDeveloperInfo?: () => void;
 }
@@ -24,6 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNewTask,
   onOpenNewProject,
   onNavigateHome,
+  onNavigateLogin,
   onOpenChatbot,
   onOpenDeveloperInfo,
 }) => {
@@ -133,8 +135,8 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           ) : (
             <button
-              onClick={signInWithGoogle}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-lg transition-colors whitespace-nowrap"
+              onClick={onNavigateLogin || signInWithGoogle}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
             >
               <LogIn className="w-3.5 h-3.5 text-slate-400" />
               <span>Sign In</span>
@@ -175,12 +177,16 @@ export const Header: React.FC<HeaderProps> = ({
                   <button
                     onClick={() => {
                       setShowProfileMenu(false);
-                      signInWithGoogle();
+                      if (onNavigateLogin) {
+                        onNavigateLogin();
+                      } else {
+                        signInWithGoogle();
+                      }
                     }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <LogIn className="w-3.5 h-3.5" />
-                    <span>Connect Google Account</span>
+                    <span>Sign In to Account</span>
                   </button>
                 )}
 
